@@ -1,0 +1,130 @@
+# DO NOT PUT THE WIFI DONGLE IN THE DEVICE BEFORE MENTIONED EXPLICITLY BELOW
+
+#YOU NEED AN ACTIVE INTERNET CONNECTION ON THE RASPBERRY PI TO INSTALL THIS.
+
+#You can share your windows PCs WiFi connection by temporarily sharing it.
+
+#You will need the raspberry pi turned off. And connect an Ethernet cable to your PC and raspberry pi.
+
+##ON YOUR PC:
+
+#Open "Network and Sharing Center" via the wifi system tray icon.
+
+#Select "Wireless Network Connection" to configure.
+
+#Select "Properties", and authenticate as an Administrator.
+
+#Uncheck the box next to "Internet Protocol Version 6 (TCP/IPv6)
+
+#Select the "Sharing" tab, and check the box to allow other network users to connect through your Internet connection.
+
+#Be sure "Local Area Connection" is selected from the "Home networking connection" drop-down box (if that drop-down exists).
+
+#Click "OK" buttons until all the network configuration windows are gone.
+
+#When you shut your Pi down, you will want to disable Internet sharing. Sometimes Windows Networking stops working properly when you don't disable it.
+
+#To disable Internet Sharing on Windows, you only have to reverse step 5 above (uncheck the box to allow other network users to connect).
+
+##ON YOUR RASPBERRY PI
+
+#connect HDMI cable and power and keyboard and wait for the raspberry pi to boot. 
+
+IT WILL REBOOT SEVERAL TIMES DURING SETUP. 
+
+#LOGIN
+
+
+# Make sure the system is up to date and all that needs to be installed is installed
+
+"sudo apt-get update && sudo apt-get install -f"
+
+# Install some necessary packages as we will build the source firmware ourselves
+
+"sudo apt-get install -y build-essential git"
+
+# There is a package for raspberry pi to add the kernel headers, so you can pick one here (if one doesn't work, use the other)
+
+"sudo apt-get install -y linux-headers"
+OR
+"sudo apt-get install -y raspberrypi-kernel-headers"
+
+# reboot for changes to take effect
+"sudo reboot"
+
+
+## STEP 2: Get and install the firmware for TP-Link-WN725N Nano
+
+# Download the Github package (for best support use git clone instead of zip)
+
+# I just put this on my home folder as I am not using this RPI for any other purpose than a livecam
+
+"git clone https://github.com/lwfinger/rtl8188eu.git"
+
+# Go into the new folder
+
+"cd rtl8188eu"
+
+# Make the source for your machine
+
+"make"
+
+# Install the firmware that was just build for your machine
+
+"sudo make install"
+
+# Reboot for changes to take effect
+
+"sudo reboot"
+
+# Shutdown now as we need to have the usb dongle in the RPI on startup
+
+"sudo shutdown -h now"
+
+## STEP 3: (INSERT USB DONGLE BEFORE CONTINUING) Check if dongle is recognized by the system
+
+# After starting your rpi check if it now recognizes your wifi dongle
+
+"lsusb"
+
+# This should show something like "BUS 00X …. REALTEK… RTL8188EUS… Wireless Network Adapter"
+
+# Great your wifi dongle is now recognised. If not, you probably don't have this dongle or you need to repeat the above steps.
+
+# Check if modules are being loaded
+
+"lsmod"
+
+# Search for something like "8188eu … 0"
+
+# Check if wlan0 is present
+
+"ifconfig -a"
+
+# There should be quite some output next to and under `wlan0`, if there's an IP address already visible, skip all next steps it's working.
+
+## STEP 4: Setup wifi settings
+
+# Add wifi settings
+
+"sudo vi /etc/network/interfaces"
+# Search for "auto wlan0" at the start, if it's not there, add it
+Then make a space, and add this below it. 
+
+"allow-hotplug wlan0
+iface wlan0 inet manual
+wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf"
+
+#Save with pressing  "esc key" then ": key" then "w key"
+Press "enter"
+
+#This will allow wlan at startup. afterwards enter in terminal
+
+"sudo systemctl enable wpa_supplicant.service"
+"restart wpa_supplicant.service"
+
+"sudo shutdown now"
+
+#Once shutdown, unplug the pi and remove the SD card and edit the wpa_supplicant.conf file on your PC and put in your WiFi information as usual.
+
+#You should be good to go now  when you turn it on.
